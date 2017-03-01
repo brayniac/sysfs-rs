@@ -11,7 +11,6 @@ pub struct Node {
 	mem_free: u64,
 	mem_total: u64,
 	mem_used: u64,
-	distance: usize,
 	hugepages_2m_free: usize,
 	hugepages_2m_total: usize,
 	hugepages_1g_free: usize,
@@ -26,7 +25,6 @@ impl Node {
 			mem_free: 0, // TODO: implement
 			mem_total: 0, // TODO: implement
 			mem_used: 0, // TODO: implement
-			distance: 0,
 			hugepages_1g_total: 0,
 			hugepages_1g_free: 0,
 			hugepages_2m_total: 0,
@@ -36,8 +34,7 @@ impl Node {
 	}
 
 	fn init(mut self) -> Result<Self, &'static str> {
-		if let Ok(distance) = util::usize_from_file(format!("/sys/devices/system/node/node{}/distance", self.id)) {
-			self.distance = distance;
+		if let Ok(_) = util::bitmask_from_hex_file(format!("/sys/devices/system/node/node{}/cpumap", self.id)) {
 			for i in 0..4096 {
 				if let Ok(mut cpu) = Cpu::new(i) {
 					cpu.set_node_id(self.id);

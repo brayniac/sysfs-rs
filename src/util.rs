@@ -60,6 +60,7 @@ pub fn bitmask_from_hex(mask: String) -> Result<Vec<bool>, &'static str> {
 			'd' | 'D' => bitmask.extend_from_slice(&vec![true, true, false, true]),
 			'e' | 'E' => bitmask.extend_from_slice(&vec![true, true, true, false]),
 			'f' | 'F' => bitmask.extend_from_slice(&vec![true, true, true, true]),
+			',' => {}
 			_ => {
 				return Err("unexpected character in mask");
 			}
