@@ -89,6 +89,10 @@ impl Node {
 		&self.cpus
 	}
 
+	pub fn cpumask(&self) -> &Vec<bool> {
+		&self.cpumask
+	}
+
 	pub fn mem_free(&self) -> u64 {
 		self.mem_free
 	}
