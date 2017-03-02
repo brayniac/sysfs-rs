@@ -8,7 +8,7 @@ pub fn usize_from_file(path: String) -> Result<usize, &'static str> {
 			Ok(_) => {
 				match s.trim().parse() {
 					Ok(i) => Ok(i),
-					Err(e) => { 
+					Err(_) => { 
 						Err("unable to parse")
 					}
 				}

@@ -8,6 +8,7 @@ use util;
 pub struct Node {
 	id: usize,
 	cpus: Vec<Cpu>,
+	cpumask: Vec<bool>,
 	mem_free: u64,
 	mem_total: u64,
 	mem_used: u64,
@@ -22,6 +23,7 @@ impl Node {
 		let node = Node {
 			id: id,
 			cpus: Vec::new(),
+			cpumask: Vec::new(),
 			mem_free: 0, // TODO: implement
 			mem_total: 0, // TODO: implement
 			mem_used: 0, // TODO: implement
@@ -34,7 +36,8 @@ impl Node {
 	}
 
 	fn init(mut self) -> Result<Self, &'static str> {
-		if let Ok(_) = util::bitmask_from_hex_file(format!("/sys/devices/system/node/node{}/cpumap", self.id)) {
+		if let Ok(cpumask) = util::bitmask_from_hex_file(format!("/sys/devices/system/node/node{}/cpumap", self.id)) {
+			self.cpumask = cpumask;
 			for i in 0..4096 {
 				if let Ok(mut cpu) = Cpu::new(i) {
 					cpu.set_node_id(self.id);

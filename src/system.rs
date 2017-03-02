@@ -7,7 +7,7 @@ pub struct System {
 
 impl System {
 	pub fn new() -> Result<System, &'static str> {
-		let mut system: System = Default::default();
+		let system: System = Default::default();
 		system.init()
 	}
 
