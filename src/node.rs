@@ -40,7 +40,7 @@ impl Node {
 			self.cpumask = cpumask.clone();
 			for i in 0..cpumask.len() {
 				if cpumask[i] {
-					let id = 2u32.pow(i as u32) as usize;
+					let id = 2u32.pow(i as u32) as usize - 1;
 					if let Ok(mut cpu) = Cpu::new(id) {
 						cpu.set_node_id(self.id);
 						self.cpus.push(cpu);
