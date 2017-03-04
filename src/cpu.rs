@@ -7,24 +7,24 @@ pub struct Cpu {
 	physical_package_id: usize,
 	core_siblings: Vec<bool>,
 	thread_siblings: Vec<bool>,
-	node_id: Option<usize>,
+	node_id: usize,
 }
 
 impl Cpu {
-	pub fn new(id: usize) -> Result<Cpu, &'static str> {
+	pub fn new(node: usize, id: usize) -> Result<Cpu, &'static str> {
 		let cpu = Cpu {
 			id: id,
 			core_id: 0,
 			physical_package_id: 0,
 			core_siblings: Vec::new(),
 			thread_siblings: Vec::new(),
-			node_id: None,
+			node_id: node,
 		};
 		cpu.init()
 	}
 
 	fn init(mut self) -> Result<Self, &'static str> {
-		if let Ok(core_id) = get_core_id(self.id) {
+		if let Ok(core_id) = get_core_id(self.node_id, self.id) {
 			self.core_id = core_id;
 		} else {
 			return Err("invalid core_id");
@@ -56,10 +56,10 @@ impl Cpu {
 	}
 
 	pub fn set_node_id(&mut self, node_id: usize) {
-		self.node_id = Some(node_id);
+		self.node_id = node_id;
 	}
 
-	pub fn node_id(&self) -> Option<usize> {
+	pub fn node_id(&self) -> usize {
 		self.node_id
 	}
 
@@ -84,8 +84,8 @@ impl Cpu {
 	}
 }
 
-fn get_core_id(id: usize) -> Result<usize, &'static str> {
-	let path = format!("/sys/devices/system/cpu/cpu{}/topology/core_id", id);
+fn get_core_id(node: usize, id: usize) -> Result<usize, &'static str> {
+	let path = format!("/sys/devices/system/node/node{}/cpu{}/topology/core_id", node, id);
 	usize_from_file(path)
 }
 

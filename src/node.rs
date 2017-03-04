@@ -38,16 +38,11 @@ impl Node {
 	fn init(mut self) -> Result<Self, &'static str> {
 		if let Ok(cpumask) = util::bitmask_from_hex_file(format!("/sys/devices/system/node/node{}/cpumap", self.id)) {
 			self.cpumask = cpumask.clone();
-			for i in 0..cpumask.len() {
-				if cpumask[i] {
-					let id = 2u32.pow(i as u32) as usize - 1;
-					if let Ok(mut cpu) = Cpu::new(id) {
+			for i in 0..4096 {
+					if let Ok(mut cpu) = Cpu::new(self.id, i) {
 						cpu.set_node_id(self.id);
 						self.cpus.push(cpu);
-					} else {
-						break;
 					}
-				}
 			}
 			self.mem_init();
 			Ok(self)
