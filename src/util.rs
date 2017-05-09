@@ -36,9 +36,23 @@ pub fn bitmask_from_hex_file(path: &str) -> Result<BitVec, &'static str> {
     }
 }
 
+
+/// parse a hex string to bytes_from_hex
+///
+/// # Examples
+///
+/// ```
+/// use sysfs_rs::util;
+///
+/// assert_eq!(util::bytes_from_hex("00"), Ok(vec![0]));
+/// assert_eq!(util::bytes_from_hex("0"), Ok(vec![0]));
+/// assert_eq!(util::bytes_from_hex("f"), Ok(vec![240]));
+/// assert_eq!(util::bytes_from_hex("F"), Ok(vec![240]));
+/// assert_eq!(util::bytes_from_hex("FF"), Ok(vec![255]));
+/// ```
 pub fn bytes_from_hex(hex: &str) -> Result<Vec<u8>, &'static str> {
     let mut bytes = Vec::<u8>::new();
-    let mut chars =  Vec::<char>::new();
+    let mut chars = Vec::<char>::new();
     for c in hex.trim().chars() {
         // skip common delimiters
         match c {
@@ -48,7 +62,12 @@ pub fn bytes_from_hex(hex: &str) -> Result<Vec<u8>, &'static str> {
         chars.push(c);
     }
     for chunk in chars.chunks(2) {
-        let string = format!("{}{}", chunk[0], chunk[1]);
+        let string = if chunk.len() == 1 {
+            format!("{}0", chunk[0])
+        } else {
+            format!("{}{}", chunk[0], chunk[1])
+        };
+
         if let Ok(byte) = u8::from_str_radix(&string.to_string(), 16) {
             bytes.push(byte);
         } else {
