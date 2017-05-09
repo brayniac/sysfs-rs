@@ -1,65 +1,61 @@
 use std::io::prelude::*;
+use std::io;
 use std::fs::File;
+use bit_vec::BitVec;
 
-pub fn usize_from_file(path: String) -> Result<usize, &'static str> {
-    if let Ok(mut f) = File::open(&path) {
-        let mut s = String::new();
-        match f.read_to_string(&mut s) {
-            Ok(_) => {
-                match s.trim().parse() {
-                    Ok(i) => Ok(i),
-                    Err(_) => Err("unable to parse"),
-                }
-            }
-            Err(_) => Err("unable to read file contents"),
+pub fn usize_from_file(path: &str) -> Result<usize, &'static str> {
+    if let Ok(s) = string_from_file(path) {
+        if let Ok(i) = s.trim().parse() {
+            Ok(i)
+        } else {
+            Err("Unable to parse")
         }
     } else {
-        Err("unable to open file")
+        Err("Unable to open file")
     }
 }
 
-pub fn bitmask_from_hex_file(file: String) -> Result<Vec<bool>, &'static str> {
-    if let Ok(mut f) = File::open(&file) {
-        let mut s = String::new();
-        match f.read_to_string(&mut s) {
-            Ok(_) => {
-                s.trim();
-                bitmask_from_hex(s)
+fn string_from_file(path: &str) -> Result<String, io::Error> {
+    match File::open(&path) {
+        Ok(mut f) => {
+            let mut s = String::new();
+            match f.read_to_string(&mut s) {
+                Ok(_) => Ok(s),
+                Err(e) => Err(e),
             }
-            Err(_) => Err("unable to read file contents"),
         }
-    } else {
-        Err("unable to open file")
+        Err(e) => Err(e),
     }
 }
 
-pub fn bitmask_from_hex(mask: String) -> Result<Vec<bool>, &'static str> {
-    let mut bitmask = Vec::new();
-    let chars = mask.trim().chars();
-    for c in chars {
+pub fn bitmask_from_hex_file(path: &str) -> Result<BitVec, &'static str> {
+    if let Ok(s) = string_from_file(path) {
+        bitmask_from_hex(&s)
+    } else {
+        Err("Error reading file")
+    }
+}
+
+pub fn bytes_from_hex(hex: &str) -> Result<Vec<u8>, &'static str> {
+    let mut bytes = Vec::<u8>::new();
+    for c in hex.trim().chars() {
+        // skip common delimiters
         match c {
-            '0' => bitmask.extend_from_slice(&vec![false, false, false, false]),
-            '1' => bitmask.extend_from_slice(&vec![false, false, false, true]),
-            '2' => bitmask.extend_from_slice(&vec![false, false, true, false]),
-            '3' => bitmask.extend_from_slice(&vec![false, false, true, true]),
-            '4' => bitmask.extend_from_slice(&vec![false, true, false, false]),
-            '5' => bitmask.extend_from_slice(&vec![false, true, false, true]),
-            '6' => bitmask.extend_from_slice(&vec![false, true, true, false]),
-            '7' => bitmask.extend_from_slice(&vec![false, true, true, true]),
-            '8' => bitmask.extend_from_slice(&vec![true, false, false, false]),
-            '9' => bitmask.extend_from_slice(&vec![true, false, false, true]),
-            'a' | 'A' => bitmask.extend_from_slice(&vec![true, false, true, false]),
-            'b' | 'B' => bitmask.extend_from_slice(&vec![true, false, true, true]),
-            'c' | 'C' => bitmask.extend_from_slice(&vec![true, true, false, false]),
-            'd' | 'D' => bitmask.extend_from_slice(&vec![true, true, false, true]),
-            'e' | 'E' => bitmask.extend_from_slice(&vec![true, true, true, false]),
-            'f' | 'F' => bitmask.extend_from_slice(&vec![true, true, true, true]),
-            ',' => {}
-            _ => {
-                return Err("unexpected character in mask");
-            }
+            ',' | ' ' | '_' => continue,
+            _ => {}
+        }
+        if let Ok(byte) = u8::from_str_radix(&c.to_string(), 16) {
+            bytes.push(byte);
+        } else {
+            return Err("Failure parsing hex string");
         }
     }
-    bitmask.reverse();
-    Ok(bitmask)
+    Ok(bytes)
+}
+
+pub fn bitmask_from_hex(hex: &str) -> Result<BitVec, &'static str> {
+    match bytes_from_hex(hex) {
+        Ok(bytes) => Ok(BitVec::from_bytes(&bytes)),
+        Err(e) => Err(e),
+    }
 }
