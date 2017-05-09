@@ -38,13 +38,18 @@ pub fn bitmask_from_hex_file(path: &str) -> Result<BitVec, &'static str> {
 
 pub fn bytes_from_hex(hex: &str) -> Result<Vec<u8>, &'static str> {
     let mut bytes = Vec::<u8>::new();
+    let mut chars =  Vec::<char>::new();
     for c in hex.trim().chars() {
         // skip common delimiters
         match c {
             ',' | ' ' | '_' => continue,
             _ => {}
         }
-        if let Ok(byte) = u8::from_str_radix(&c.to_string(), 16) {
+        chars.push(c);
+    }
+    for chunk in chars.chunks(2) {
+        let string = format!("{}{}", chunk[0], chunk[1]);
+        if let Ok(byte) = u8::from_str_radix(&string.to_string(), 16) {
             bytes.push(byte);
         } else {
             return Err("Failure parsing hex string");
