@@ -18,3 +18,4 @@ keywords = [ "sysfs" ]
 categories = []
 
 [dependencies]
+bit-vec = "0.4.3"
