@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use std::fs::File;
-use bit_vec::BitVec;
+
 use cpu::Cpu;
 use util;
 
@@ -8,7 +8,7 @@ use util;
 pub struct Node {
     id: usize,
     cpus: Vec<Cpu>,
-    cpumask: BitVec,
+    cpumask: Vec<bool>,
     mem_free: u64,
     mem_total: u64,
     mem_used: u64,
@@ -23,10 +23,10 @@ impl Node {
         let node = Node {
             id: id,
             cpus: Vec::new(),
-            cpumask: BitVec::new(),
-            mem_free: 0,
-            mem_total: 0,
-            mem_used: 0,
+            cpumask: Vec::new(),
+            mem_free: 0, // TODO: implement
+            mem_total: 0, // TODO: implement
+            mem_used: 0, // TODO: implement
             hugepages_1g_total: 0,
             hugepages_1g_free: 0,
             hugepages_2m_total: 0,
@@ -36,8 +36,8 @@ impl Node {
     }
 
     fn init(mut self) -> Result<Self, &'static str> {
-        let path = format!("/sys/devices/system/node/node{}/cpumap", self.id);
-        if let Ok(cpumask) = util::bitmask_from_hex_file(&path) {
+        if let Ok(cpumask) = util::bitmask_from_hex_file(format!("/sys/devices/system/node/node{}/cpumap",
+                                                                 self.id)) {
             self.cpumask = cpumask.clone();
             for i in 0..4096 {
                 if let Ok(mut cpu) = Cpu::new(self.id, i) {
@@ -56,7 +56,7 @@ impl Node {
         let path = format!("/sys/devices/system/node/node{}/meminfo", self.id);
         if let Ok(mut f) = File::open(&path) {
             let mut s = String::new();
-            if f.read_to_string(&mut s).is_ok() {
+            if let Ok(_) = f.read_to_string(&mut s) {
                 for l in s.lines() {
                     let tokens: Vec<&str> = l.split_whitespace().collect();
                     match tokens[2] {
@@ -74,21 +74,10 @@ impl Node {
                 }
             }
         }
-        let path = format!("/sys/devices/system/node/node{}/hugepages/hugepages-2048kB/free_hugepages",
-                           self.id);
-        self.hugepages_2m_free = util::usize_from_file(&path).unwrap_or(0);
-
-        let path = format!("/sys/devices/system/node/node{}/hugepages/hugepages-2048kB/nr_hugepages",
-                           self.id);
-        self.hugepages_2m_total = util::usize_from_file(&path).unwrap_or(0);
-
-        let path = format!("/sys/devices/system/node/node{}/hugepages/hugepages-1048576kB/free_hugepages",
-                           self.id);
-        self.hugepages_1g_free = util::usize_from_file(&path).unwrap_or(0);
-
-        let path = format!("/sys/devices/system/node/node{}/hugepages/hugepages-1048576kB/nr_hugepages",
-                           self.id);
-        self.hugepages_1g_total = util::usize_from_file(&path).unwrap_or(0);
+        self.hugepages_2m_free = util::usize_from_file(format!("/sys/devices/system/node/node{}/hugepages/hugepages-2048kB/free_hugepages", self.id)).unwrap_or(0);
+        self.hugepages_2m_total = util::usize_from_file(format!("/sys/devices/system/node/node{}/hugepages/hugepages-2048kB/nr_hugepages", self.id)).unwrap_or(0);
+        self.hugepages_1g_free = util::usize_from_file(format!("/sys/devices/system/node/node{}/hugepages/hugepages-1048576kB/free_hugepages", self.id)).unwrap_or(0);
+        self.hugepages_1g_total = util::usize_from_file(format!("/sys/devices/system/node/node{}/hugepages/hugepages-1048576kB/nr_hugepages", self.id)).unwrap_or(0);
     }
 
     pub fn id(&self) -> usize {
@@ -99,7 +88,7 @@ impl Node {
         &self.cpus
     }
 
-    pub fn cpumask(&self) -> &BitVec {
+    pub fn cpumask(&self) -> &Vec<bool> {
         &self.cpumask
     }
 
