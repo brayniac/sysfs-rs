@@ -1,13 +1,12 @@
 use util::*;
-use bit_vec::BitVec;
 
 #[derive(Clone, Debug)]
 pub struct Cpu {
     id: usize,
     core_id: usize,
     physical_package_id: usize,
-    core_siblings: BitVec,
-    thread_siblings: BitVec,
+    core_siblings: Vec<bool>,
+    thread_siblings: Vec<bool>,
     node_id: usize,
 }
 
@@ -17,8 +16,8 @@ impl Cpu {
             id: id,
             core_id: 0,
             physical_package_id: 0,
-            core_siblings: BitVec::new(),
-            thread_siblings: BitVec::new(),
+            core_siblings: Vec::new(),
+            thread_siblings: Vec::new(),
             node_id: node,
         };
         cpu.init()
@@ -68,11 +67,11 @@ impl Cpu {
         self.physical_package_id
     }
 
-    pub fn core_siblings(&self) -> BitVec {
+    pub fn core_siblings(&self) -> Vec<bool> {
         self.core_siblings.clone()
     }
 
-    pub fn thread_siblings(&self) -> BitVec {
+    pub fn thread_siblings(&self) -> Vec<bool> {
         self.thread_siblings.clone()
     }
 
@@ -89,21 +88,21 @@ fn get_core_id(node: usize, id: usize) -> Result<usize, &'static str> {
     let path = format!("/sys/devices/system/node/node{}/cpu{}/topology/core_id",
                        node,
                        id);
-    usize_from_file(&path)
+    usize_from_file(path)
 }
 
-fn get_core_siblings(id: usize) -> Result<BitVec, &'static str> {
+fn get_core_siblings(id: usize) -> Result<Vec<bool>, &'static str> {
     let path = format!("/sys/devices/system/cpu/cpu{}/topology/core_siblings", id);
-    bitmask_from_hex_file(&path)
+    bitmask_from_hex_file(path)
 }
 
-fn get_thread_siblings(id: usize) -> Result<BitVec, &'static str> {
+fn get_thread_siblings(id: usize) -> Result<Vec<bool>, &'static str> {
     let path = format!("/sys/devices/system/cpu/cpu{}/topology/thread_siblings", id);
-    bitmask_from_hex_file(&path)
+    bitmask_from_hex_file(path)
 }
 
 fn get_physical_package_id(id: usize) -> Result<usize, &'static str> {
     let path = format!("/sys/devices/system/cpu/cpu{}/topology/physical_package_id",
                        id);
-    usize_from_file(&path)
+    usize_from_file(path)
 }

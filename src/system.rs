@@ -12,6 +12,7 @@ impl System {
     }
 
     fn init(mut self) -> Result<Self, &'static str> {
+        // TODO: popolate Nodes
         for i in 0..4096 {
             match Node::new(i) {
                 Ok(n) => {
