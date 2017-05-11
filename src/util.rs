@@ -77,9 +77,33 @@ pub fn bytes_from_hex(hex: &str) -> Result<Vec<u8>, &'static str> {
     Ok(bytes)
 }
 
+/// returns a `BitVec` from a hex `&str`
+///
+/// # Examples
+///
+/// ```rust
+/// use sysfs_rs::util;
+///
+/// let b = util::bitmask_from_hex("f00").expect("That will parse");
+/// assert!(b.eq_vec(&[true, true, true, true, false, false, false, false, false, false, false, false]));
+///
+/// let b = util::bitmask_from_hex("80").expect("That will parse");
+/// assert!(b.eq_vec(&[true, false, false, false, false, false, false, false]));
+///
+/// ```
 pub fn bitmask_from_hex(hex: &str) -> Result<BitVec, &'static str> {
     match bytes_from_hex(hex) {
-        Ok(bytes) => Ok(BitVec::from_bytes(&bytes)),
+        Ok(bytes) => {
+            if hex.trim().chars().count() % 2 == 1 {
+                let mut bv = BitVec::from_bytes(&bytes);
+                for _ in 0..4 {
+                    let _ = bv.pop();
+                }
+                Ok(bv)
+            } else {
+                Ok(BitVec::from_bytes(&bytes))
+            }
+        }
         Err(e) => Err(e),
     }
 }
